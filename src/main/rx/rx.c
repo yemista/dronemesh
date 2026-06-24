@@ -55,6 +55,7 @@
 #include "pg/rx.h"
 
 #include "rx/rx.h"
+#include "rx/rx_relay.h"
 #include "rx/pwm.h"
 #include "rx/fport.h"
 #include "rx/sbus.h"
@@ -854,6 +855,11 @@ bool calculateRxChannelsAndUpdateFailsafe(timeUs_t currentTimeUs)
     }
 
     readRxChannelsApplyRanges();            // returns rcRaw
+
+    // Notify the relay of the new frame so TASK_RX_RELAY can forward the raw,
+    // unprocessed channel values out over its configured transmitter.
+    rxRelayOnFrame(currentTimeUs);
+
     detectAndApplySignalLossBehaviour();    // returns rcData
 
     rcSampleIndex++;

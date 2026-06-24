@@ -89,6 +89,7 @@
 #include "pg/motor.h"
 
 #include "rx/rx.h"
+#include "rx/rx_relay.h"
 #include "rx/rc_stats.h"
 
 #include "scheduler/scheduler.h"
@@ -391,6 +392,7 @@ task_attribute_t task_attributes[TASK_COUNT] = {
 #endif
 
     [TASK_RX] = DEFINE_TASK("RX", NULL, rxUpdateCheck, taskUpdateRxMain, TASK_PERIOD_HZ(33), TASK_PRIORITY_HIGH), // If event-based scheduling doesn't work, fallback to periodic scheduling
+    [TASK_RX_RELAY] = DEFINE_TASK("RX_RELAY", NULL, rxRelayUpdateCheck, rxRelayUpdate, TASK_PERIOD_HZ(33), TASK_PRIORITY_MEDIUM), // forwards received raw RC out over the configured transmitter
     [TASK_DISPATCH] = DEFINE_TASK("DISPATCH", NULL, NULL, dispatchProcess, TASK_PERIOD_HZ(1000), TASK_PRIORITY_HIGH),
 
 #ifdef USE_BEEPER
@@ -573,6 +575,7 @@ void tasksInit(void)
 #endif
 
     setTaskEnabled(TASK_RX, true);
+    setTaskEnabled(TASK_RX_RELAY, true);
 
     setTaskEnabled(TASK_DISPATCH, dispatchIsEnabled());
 

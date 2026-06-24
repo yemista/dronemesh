@@ -106,6 +106,7 @@ typedef enum {
     TASK_ACCEL,
     TASK_ATTITUDE,
     TASK_RX,
+    TASK_RX_RELAY,
     TASK_SERIAL,
     TASK_DISPATCH,
     TASK_BATTERY_VOLTAGE,
@@ -197,6 +198,10 @@ typedef enum {
 #endif
 #if ENABLE_DRONECAN
     TASK_DRONECAN,
+#endif
+
+#if ENABLE_RC_LEADER
+    TASK_RC_LEADER,
 #endif
 
     /* Count of real tasks */

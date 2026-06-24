@@ -170,6 +170,7 @@
 #include "pg/vtx_io.h"
 
 #include "rx/rx.h"
+#include "rx/rx_relay.h"
 #include "rx/spektrum.h"
 
 #include "scheduler/scheduler.h"
@@ -792,6 +793,7 @@ void initPhase3(void)
     failsafeInit();
 
     rxInit();
+    rxRelayInit();
 
 #ifdef USE_GPS
     if (featureIsEnabled(FEATURE_GPS)) {

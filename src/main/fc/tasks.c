@@ -90,6 +90,8 @@
 
 #include "rx/rx.h"
 #include "rx/rx_relay.h"
+
+#include "fleet/fleet_id.h"
 #include "rx/rc_stats.h"
 
 #include "scheduler/scheduler.h"
@@ -501,6 +503,8 @@ task_attribute_t task_attributes[TASK_COUNT] = {
     [TASK_DRONECAN] = DEFINE_TASK("DRONECAN", NULL, NULL, dronecanUpdate, TASK_PERIOD_HZ(50), TASK_PRIORITY_LOW),
 #endif
 
+    [TASK_FLEET] = DEFINE_TASK("FLEET", NULL, NULL, fleetIdUpdate, TASK_PERIOD_HZ(50), TASK_PRIORITY_LOW), // fleet node-ID consensus
+
 };
 
 task_t *getTask(unsigned taskId)
@@ -705,4 +709,6 @@ void tasksInit(void)
 #if ENABLE_DRONECAN
     setTaskEnabled(TASK_DRONECAN, dronecanIsInitialised());
 #endif
+
+    setTaskEnabled(TASK_FLEET, true);
 }

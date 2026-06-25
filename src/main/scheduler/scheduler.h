@@ -204,6 +204,8 @@ typedef enum {
     TASK_RC_LEADER,
 #endif
 
+    TASK_FLEET,
+
     /* Count of real tasks */
     TASK_COUNT,
 

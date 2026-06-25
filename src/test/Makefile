@@ -208,6 +208,10 @@ flight_mixer_unittest :=  \
 		$(USER_DIR)/common/maths.c
 
 
+fleet_id_unittest_SRC := \
+		$(USER_DIR)/fleet/fleet_id.c
+
+
 gps_conversion_unittest_SRC := \
 		$(USER_DIR)/common/gps_conversion.c
 

@@ -171,6 +171,8 @@
 
 #include "rx/rx.h"
 #include "rx/rx_relay.h"
+
+#include "fleet/fleet_id.h"
 #include "rx/spektrum.h"
 
 #include "scheduler/scheduler.h"
@@ -794,6 +796,7 @@ void initPhase3(void)
 
     rxInit();
     rxRelayInit();
+    fleetIdInit();
 
 #ifdef USE_GPS
     if (featureIsEnabled(FEATURE_GPS)) {

@@ -86,3 +86,9 @@ void fleetIdUpdate(timeUs_t currentTimeUs);
 // Results.
 bool    fleetIdIsResolved(void);    // true once we hold an uncontested ID
 uint8_t fleetIdGet(void);           // our node ID, or FLEET_ID_UNASSIGNED
+
+// Canonical gate for all mesh functionality. Mesh code must ignore every mesh
+// command/input unless this returns true. The one exception is the ID-assignment
+// protocol itself (fleetIdReceive/fleetIdUpdate), which runs in order to *get*
+// an ID and therefore cannot gate on already having one.
+bool    fleetHasId(void);

@@ -68,20 +68,27 @@ static bool isObserved(uint8_t id)
     return (id >= 1 && id <= FLEET_ID_MAX) && (observedIds & (1u << (id - 1)));
 }
 
-// Deterministically pick a candidate ID, preferring one we have not seen taken.
-// Starts from a UID-derived offset so different drones spread out, then linear
-// probes the ID space. Falls back to the UID-derived slot if everything looks
-// taken (conflicts will then sort it out).
+// True once every ID in the 1..FLEET_ID_MAX space has been seen claimed.
+static bool allIdsObserved(void)
+{
+    const uint32_t fullMask = (FLEET_ID_MAX >= 32) ? 0xFFFFFFFFu : ((1u << FLEET_ID_MAX) - 1);
+    return (observedIds & fullMask) == fullMask;
+}
+
+// Pick a free candidate ID, preferring one we have not seen taken. Starts from a
+// UID-derived offset so different drones spread out, then advances (wrapping)
+// until it finds a free ID. The loop only ends when every ID has been observed
+// as claimed, in which case there is nothing free to hand out.
 static uint8_t pickCandidateId(void)
 {
-    const uint8_t start = (uint8_t)(nodeUid % FLEET_ID_MAX) + 1; // 1..FLEET_ID_MAX
-    for (uint8_t i = 0; i < FLEET_ID_MAX; i++) {
-        const uint8_t candidate = (uint8_t)(((start - 1 + i) % FLEET_ID_MAX) + 1);
+    uint8_t candidate = (uint8_t)(nodeUid % FLEET_ID_MAX) + 1; // 1..FLEET_ID_MAX
+    while (!allIdsObserved()) {
         if (!isObserved(candidate)) {
             return candidate;
         }
+        candidate = (uint8_t)(candidate % FLEET_ID_MAX) + 1;   // next ID, wrapping
     }
-    return start;
+    return FLEET_ID_UNASSIGNED;  // every ID is claimed
 }
 
 static void sendClaim(timeUs_t currentTimeUs)
@@ -210,4 +217,10 @@ bool fleetIdIsResolved(void)
 uint8_t fleetIdGet(void)
 {
     return nodeId;
+}
+
+bool fleetHasId(void)
+{
+    // We "have an assigned ID" only once we hold an uncontested one.
+    return state == FLEET_ID_STATE_CLAIMED && nodeId != FLEET_ID_UNASSIGNED;
 }

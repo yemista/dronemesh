@@ -28,6 +28,8 @@
 #include "rx/rx.h"
 #include "rx/rx_relay.h"
 
+#include "fleet/fleet_id.h"
+
 // Snapshot of the most recently received raw channels, waiting to be forwarded.
 static float relayChannels[MAX_SUPPORTED_RC_CHANNEL_COUNT];
 static uint8_t relayChannelCount = 0;
@@ -59,6 +61,11 @@ void rxRelaySetTransmitFn(rxRelayTransmitFnPtr fn)
 
 void rxRelayOnFrame(timeUs_t currentTimeUs)
 {
+    // Mesh policy: ignore mesh input until this drone holds an assigned fleet ID.
+    if (!fleetHasId()) {
+        return;
+    }
+
     // Read the unprocessed values directly from the receiver driver, in wire
     // order, with no channel remapping, calibration or failsafe applied.
     const uint8_t count = MIN(rxRuntimeState.channelCount, (uint8_t)MAX_SUPPORTED_RC_CHANNEL_COUNT);
@@ -81,6 +88,13 @@ bool rxRelayUpdateCheck(timeUs_t currentTimeUs, timeDelta_t currentDeltaTimeUs)
 void rxRelayUpdate(timeUs_t currentTimeUs)
 {
     UNUSED(currentTimeUs);
+
+    // Mesh policy: never emit on the mesh without an assigned fleet ID (the ID
+    // may have been lost since the frame was captured).
+    if (!fleetHasId()) {
+        relayFramePending = false;
+        return;
+    }
 
     if (!relayFramePending) {
         return;

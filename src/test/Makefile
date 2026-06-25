@@ -218,6 +218,11 @@ fleet_id_unittest_SRC := \
 		$(USER_DIR)/fleet/fleet_id.c
 
 
+fleet_leader_unittest_SRC := \
+		$(USER_DIR)/fleet/fleet_leader.c \
+		$(USER_DIR)/fleet/fleet_id.c
+
+
 gps_conversion_unittest_SRC := \
 		$(USER_DIR)/common/gps_conversion.c
 

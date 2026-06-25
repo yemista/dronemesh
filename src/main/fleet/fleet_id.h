@@ -48,7 +48,8 @@
 #define FLEET_ID_MAX        32
 
 typedef enum {
-    FLEET_MSG_ID_CLAIM = 1,     // "I intend to use / am defending this node ID"
+    FLEET_MSG_ID_CLAIM         = 1, // "I intend to use / am defending this node ID"
+    FLEET_MSG_LEADER_HEARTBEAT = 2, // leader liveness + authoritative membership
 } fleetMsgType_e;
 
 // Claimant lifecycle, also carried on the wire so a settled (defending) drone
@@ -92,3 +93,9 @@ uint8_t fleetIdGet(void);           // our node ID, or FLEET_ID_UNASSIGNED
 // protocol itself (fleetIdReceive/fleetIdUpdate), which runs in order to *get*
 // an ID and therefore cannot gate on already having one.
 bool    fleetHasId(void);
+
+// Live fleet membership, derived from recently-heard ID claims. A member that
+// goes silent for FLEET_MEMBER_TIMEOUT_MS ages out. Includes ourselves once we
+// hold an ID. This is the basis for the dynamic fleet size used by election.
+uint32_t fleetMemberMask(void);    // bitmask of live member IDs (bit id-1)
+uint8_t  fleetMemberCount(void);   // number of live drones in the fleet

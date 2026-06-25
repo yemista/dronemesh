@@ -29,6 +29,7 @@
 
 #include "fleet/fleet_frame.h"
 #include "fleet/fleet_id.h"
+#include "fleet/fleet_leader.h"
 #include "fleet/fleet_link.h"
 
 static serialPort_t *port = NULL;
@@ -47,6 +48,9 @@ static void fleetLinkDispatch(const uint8_t *payload, uint8_t len)
     switch (payload[0]) { // fleetMsgType_e
     case FLEET_MSG_ID_CLAIM:
         fleetIdReceive(payload, len);
+        break;
+    case FLEET_MSG_LEADER_HEARTBEAT:
+        fleetLeaderReceiveHeartbeat(payload, len);
         break;
     default:
         break; // unknown / not-yet-handled message type
@@ -100,7 +104,9 @@ void fleetLinkInit(void)
         return;
     }
 
-    // The UART is now the outbound path for fleet sub-protocols. fleetIdInit()
-    // runs before us and resets the send hook to a stub, so install ours here.
+    // The UART is now the outbound path for fleet sub-protocols. Their *Init()
+    // functions run before us and reset their send hooks to stubs, so install
+    // ours here.
     fleetIdSetSendFn(fleetLinkSend);
+    fleetLeaderSetSendFn(fleetLinkSend);
 }

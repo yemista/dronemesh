@@ -173,6 +173,7 @@
 #include "rx/rx_relay.h"
 
 #include "fleet/fleet_id.h"
+#include "fleet/fleet_leader.h"
 #include "fleet/fleet_link.h"
 #include "rx/spektrum.h"
 
@@ -798,7 +799,8 @@ void initPhase3(void)
     rxInit();
     rxRelayInit();
     fleetIdInit();
-    fleetLinkInit();    // after fleetIdInit: installs the UART as the fleet send path
+    fleetLeaderInit();
+    fleetLinkInit();    // after the fleet sub-protocols: installs the UART as their send path
 
 #ifdef USE_GPS
     if (featureIsEnabled(FEATURE_GPS)) {

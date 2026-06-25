@@ -35,6 +35,11 @@
 #define FLEET_ID_PROBE_COUNT         3              // uncontested probes needed to settle
 #define FLEET_ID_ANNOUNCE_INTERVAL_US (1000 * 1000) // re-announce/defend cadence once claimed
 
+// A member is considered live if we have heard a claim from it within this
+// window. A settled drone re-announces every FLEET_ID_ANNOUNCE_INTERVAL_US (1s),
+// so this tolerates ~2 missed announcements before dropping a silent drone.
+#define FLEET_MEMBER_TIMEOUT_MS      3000
+
 // Our identity.
 static uint32_t nodeUid;                // hardware tiebreaker (lowest wins)
 static uint8_t  nodeId = FLEET_ID_UNASSIGNED;
@@ -44,9 +49,14 @@ static fleetIdState_e state = FLEET_ID_STATE_PROBING;
 static uint8_t  probesSent;
 static timeUs_t lastTxUs;
 
-// Bitset of IDs we have heard claimed by *other* drones, used to bias candidate
-// selection toward an apparently-free ID. Bit (id-1) corresponds to ID id.
+// Bitset of IDs we currently believe are claimed by *other* live drones. Bit
+// (id-1) corresponds to ID id. Bits are set when a claim is heard and cleared
+// once the claimant goes silent for FLEET_MEMBER_TIMEOUT_MS, so this doubles as
+// the live-membership view and as the bias for free-ID selection.
 static uint32_t observedIds;
+
+// Last time (ms) a claim was heard for each ID, used to age out silent members.
+static uint32_t idLastHeardMs[FLEET_ID_MAX];
 
 // Link layer.
 static void nullSend(const uint8_t *data, uint8_t len)
@@ -60,6 +70,26 @@ static void markObserved(uint8_t id)
 {
     if (id >= 1 && id <= FLEET_ID_MAX) {
         observedIds |= (1u << (id - 1));
+    }
+}
+
+// Record that a claim for id was just heard: mark it live and refresh its timer.
+static void recordHeard(uint8_t id)
+{
+    if (id >= 1 && id <= FLEET_ID_MAX) {
+        observedIds |= (1u << (id - 1));
+        idLastHeardMs[id - 1] = millis();
+    }
+}
+
+// Drop members we have not heard from within the timeout, freeing their IDs.
+static void ageObservedIds(void)
+{
+    const uint32_t now = millis();
+    for (uint8_t i = 0; i < FLEET_ID_MAX; i++) {
+        if ((observedIds & (1u << i)) && (now - idLastHeardMs[i]) >= FLEET_MEMBER_TIMEOUT_MS) {
+            observedIds &= ~(1u << i);
+        }
     }
 }
 
@@ -120,6 +150,7 @@ void fleetIdInit(void)
     nodeUid = 0;    // no MCU UID (e.g. SITL); override via fleetIdSetUid()
 #endif
     observedIds = 0;
+    memset(idLastHeardMs, 0, sizeof(idLastHeardMs));
     sendFn = nullSend;
     enterProbing(pickCandidateId(), 0);
 }
@@ -169,7 +200,7 @@ void fleetIdReceive(const uint8_t *data, uint8_t len)
         return; // our own claim echoed back by the link layer
     }
 
-    markObserved(msg.nodeId);
+    recordHeard(msg.nodeId);
 
     if (msg.nodeId != nodeId) {
         return; // no conflict with us
@@ -189,6 +220,8 @@ void fleetIdReceive(const uint8_t *data, uint8_t len)
 
 void fleetIdUpdate(timeUs_t currentTimeUs)
 {
+    ageObservedIds(); // expire silent members so the live view stays current
+
     switch (state) {
     case FLEET_ID_STATE_PROBING:
         if (cmpTimeUs(currentTimeUs, lastTxUs) >= FLEET_ID_PROBE_INTERVAL_US) {
@@ -223,4 +256,19 @@ bool fleetHasId(void)
 {
     // We "have an assigned ID" only once we hold an uncontested one.
     return state == FLEET_ID_STATE_CLAIMED && nodeId != FLEET_ID_UNASSIGNED;
+}
+
+uint32_t fleetMemberMask(void)
+{
+    // Live IDs heard from others, plus ourselves once we hold an ID.
+    uint32_t mask = observedIds;
+    if (fleetHasId()) {
+        mask |= (1u << (nodeId - 1));
+    }
+    return mask;
+}
+
+uint8_t fleetMemberCount(void)
+{
+    return (uint8_t)__builtin_popcount(fleetMemberMask());
 }

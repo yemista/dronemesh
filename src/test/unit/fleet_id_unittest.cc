@@ -156,3 +156,40 @@ TEST_F(FleetIdTest, IgnoresOwnEcho)
     EXPECT_TRUE(fleetIdIsResolved());
     EXPECT_EQ(fleetIdGet(), 11);
 }
+
+TEST_F(FleetIdTest, MemberCountTracksLiveClaims)
+{
+    fleetIdSetUid(10);
+    driveUntilResolved();
+    ASSERT_TRUE(fleetIdIsResolved());
+
+    // Three other drones announce distinct IDs.
+    deliver(makeClaim(20, FLEET_ID_STATE_CLAIMED, 101));
+    deliver(makeClaim(21, FLEET_ID_STATE_CLAIMED, 102));
+    deliver(makeClaim(22, FLEET_ID_STATE_CLAIMED, 103));
+
+    EXPECT_EQ(fleetMemberCount(), 4); // three others + ourselves
+
+    const uint32_t mask = fleetMemberMask();
+    EXPECT_TRUE(mask & (1u << (11 - 1)));  // ourselves (id 11)
+    EXPECT_TRUE(mask & (1u << (20 - 1)));
+    EXPECT_TRUE(mask & (1u << (22 - 1)));
+}
+
+TEST_F(FleetIdTest, SilentMemberAgesOut)
+{
+    fleetIdSetUid(10);
+    driveUntilResolved();
+    ASSERT_TRUE(fleetIdIsResolved());
+
+    deliver(makeClaim(20, FLEET_ID_STATE_CLAIMED, 101));
+    EXPECT_EQ(fleetMemberCount(), 2);                   // the other drone + ourselves
+    EXPECT_TRUE(fleetMemberMask() & (1u << (20 - 1)));
+
+    // Hear nothing more from id 20; advance past the member timeout and tick.
+    testTimeUs += 4000 * 1000; // 4s > FLEET_MEMBER_TIMEOUT_MS (3s)
+    fleetIdUpdate(testTimeUs);
+
+    EXPECT_FALSE(fleetMemberMask() & (1u << (20 - 1))); // aged out
+    EXPECT_EQ(fleetMemberCount(), 1);                   // just ourselves now
+}

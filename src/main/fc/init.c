@@ -172,6 +172,7 @@
 #include "rx/rx.h"
 #include "rx/rx_relay.h"
 
+#include "fleet/fleet_av.h"
 #include "fleet/fleet_id.h"
 #include "fleet/fleet_leader.h"
 #include "fleet/fleet_link.h"
@@ -656,6 +657,20 @@ void initMsc(void)
 }
 #endif
 
+#if defined(USE_VTX_COMMON)
+// Fleet A/V video gate -> VTX pit mode. enable == false silences the VTX (pit
+// mode on). Returns false while the VTX is not ready so fleet_av retries later.
+static bool fleetAvVtxControl(bool enable)
+{
+    vtxDevice_t *vtxDevice = vtxCommonDevice();
+    if (!vtxDevice || !vtxCommonDeviceIsReady(vtxDevice)) {
+        return false;
+    }
+    vtxCommonSetPitMode(vtxDevice, enable ? 0 : 1); // pit mode on == not transmitting
+    return true;
+}
+#endif
+
 void initPhase3(void)
 {
 #ifdef USE_PERSISTENT_MSC_RTC
@@ -800,6 +815,10 @@ void initPhase3(void)
     rxRelayInit();
     fleetIdInit();
     fleetLeaderInit();
+    fleetAvInit();
+#if defined(USE_VTX_COMMON)
+    fleetAvSetVideoControlFn(fleetAvVtxControl); // leader -> VTX on, everyone else off
+#endif
     fleetLinkInit();    // after the fleet sub-protocols: installs the UART as their send path
 
 #ifdef USE_GPS

@@ -195,6 +195,7 @@ COMMON_SRC = \
             rx/pwm.c \
             rx/frsky_crc.c \
             rx/rc_stats.c \
+            fleet/fleet_av.c \
             fleet/fleet_frame.c \
             fleet/fleet_id.c \
             fleet/fleet_leader.c \

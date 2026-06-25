@@ -91,6 +91,7 @@
 #include "rx/rx.h"
 #include "rx/rx_relay.h"
 
+#include "fleet/fleet_av.h"
 #include "fleet/fleet_id.h"
 #include "fleet/fleet_leader.h"
 #include "fleet/fleet_link.h"
@@ -372,6 +373,7 @@ static void taskFleet(timeUs_t currentTimeUs)
     fleetLinkUpdate(currentTimeUs);   // drain inbound mesh frames -> dispatch
     fleetIdUpdate(currentTimeUs);     // node-ID consensus + membership aging
     fleetLeaderUpdate(currentTimeUs); // leader heartbeat / leader-alive tracking
+    fleetAvUpdate(currentTimeUs);     // gate video/audio transmit on leadership
 }
 
 // Task info in .bss (unitialised data)

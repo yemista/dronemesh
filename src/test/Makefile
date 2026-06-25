@@ -208,6 +208,12 @@ flight_mixer_unittest :=  \
 		$(USER_DIR)/common/maths.c
 
 
+fleet_frame_unittest_SRC := \
+		$(USER_DIR)/fleet/fleet_frame.c \
+		$(USER_DIR)/common/crc.c \
+		$(USER_DIR)/common/streambuf.c
+
+
 fleet_id_unittest_SRC := \
 		$(USER_DIR)/fleet/fleet_id.c
 

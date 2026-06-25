@@ -92,6 +92,7 @@
 #include "rx/rx_relay.h"
 
 #include "fleet/fleet_id.h"
+#include "fleet/fleet_link.h"
 #include "rx/rc_stats.h"
 
 #include "scheduler/scheduler.h"
@@ -363,6 +364,14 @@ static void taskCameraControl(timeUs_t currentTimeUs)
     .staticPriority = staticPriorityParam \
 }
 
+// Drain the mesh link (de-frame + dispatch inbound messages), then tick the
+// fleet node-ID consensus.
+static void taskFleet(timeUs_t currentTimeUs)
+{
+    fleetLinkUpdate(currentTimeUs);
+    fleetIdUpdate(currentTimeUs);
+}
+
 // Task info in .bss (unitialised data)
 task_t tasks[TASK_COUNT];
 
@@ -503,7 +512,7 @@ task_attribute_t task_attributes[TASK_COUNT] = {
     [TASK_DRONECAN] = DEFINE_TASK("DRONECAN", NULL, NULL, dronecanUpdate, TASK_PERIOD_HZ(50), TASK_PRIORITY_LOW),
 #endif
 
-    [TASK_FLEET] = DEFINE_TASK("FLEET", NULL, NULL, fleetIdUpdate, TASK_PERIOD_HZ(50), TASK_PRIORITY_LOW), // fleet node-ID consensus
+    [TASK_FLEET] = DEFINE_TASK("FLEET", NULL, NULL, taskFleet, TASK_PERIOD_HZ(50), TASK_PRIORITY_LOW), // mesh link + fleet node-ID consensus
 
 };
 

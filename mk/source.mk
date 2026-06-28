@@ -196,10 +196,12 @@ COMMON_SRC = \
             rx/frsky_crc.c \
             rx/rc_stats.c \
             fleet/fleet_av.c \
+            fleet/fleet_avoid.c \
             fleet/fleet_frame.c \
             fleet/fleet_id.c \
             fleet/fleet_leader.c \
             fleet/fleet_link.c \
+            fleet/fleet_state.c \
             rx/rx.c \
             rx/rx_relay.c \
             rx/rx_bind.c \

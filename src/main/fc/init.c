@@ -173,9 +173,11 @@
 #include "rx/rx_relay.h"
 
 #include "fleet/fleet_av.h"
+#include "fleet/fleet_avoid.h"
 #include "fleet/fleet_id.h"
 #include "fleet/fleet_leader.h"
 #include "fleet/fleet_link.h"
+#include "fleet/fleet_state.h"
 #include "rx/spektrum.h"
 
 #include "scheduler/scheduler.h"
@@ -816,6 +818,8 @@ void initPhase3(void)
     fleetIdInit();
     fleetLeaderInit();
     fleetAvInit();
+    fleetStateInit();
+    fleetAvoidInit();
 #if defined(USE_VTX_COMMON)
     fleetAvSetVideoControlFn(fleetAvVtxControl); // leader -> VTX on, everyone else off
 #endif

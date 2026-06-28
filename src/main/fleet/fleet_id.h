@@ -50,6 +50,8 @@
 typedef enum {
     FLEET_MSG_ID_CLAIM         = 1, // "I intend to use / am defending this node ID"
     FLEET_MSG_LEADER_HEARTBEAT = 2, // leader liveness + authoritative membership
+    FLEET_MSG_STATE_SAMPLE     = 3, // periodic local state broadcast for decentralized collision checks
+    FLEET_MSG_AVOID_COMMAND    = 4, // ESP32 -> FC: apply this avoidance lean (ESP32 owns detection)
 } fleetMsgType_e;
 
 // Claimant lifecycle, also carried on the wire so a settled (defending) drone

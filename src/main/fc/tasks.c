@@ -92,9 +92,11 @@
 #include "rx/rx_relay.h"
 
 #include "fleet/fleet_av.h"
+#include "fleet/fleet_avoid.h"
 #include "fleet/fleet_id.h"
 #include "fleet/fleet_leader.h"
 #include "fleet/fleet_link.h"
+#include "fleet/fleet_state.h"
 #include "rx/rc_stats.h"
 
 #include "scheduler/scheduler.h"
@@ -374,6 +376,8 @@ static void taskFleet(timeUs_t currentTimeUs)
     fleetIdUpdate(currentTimeUs);     // node-ID consensus + membership aging
     fleetLeaderUpdate(currentTimeUs); // leader heartbeat / leader-alive tracking
     fleetAvUpdate(currentTimeUs);     // gate video/audio transmit on leadership
+    fleetStateUpdate(currentTimeUs);  // broadcast/receive local fleet state + collision checks
+    fleetAvoidUpdate(currentTimeUs);  // age out avoid command from ESP32 + publish diagnostics
 }
 
 // Task info in .bss (unitialised data)

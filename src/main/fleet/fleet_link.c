@@ -27,10 +27,12 @@
 
 #include "io/serial.h"
 
+#include "fleet/fleet_avoid.h"
 #include "fleet/fleet_frame.h"
 #include "fleet/fleet_id.h"
 #include "fleet/fleet_leader.h"
 #include "fleet/fleet_link.h"
+#include "fleet/fleet_state.h"
 
 static serialPort_t *port = NULL;
 static fleetFrameParser_t parser;
@@ -51,6 +53,12 @@ static void fleetLinkDispatch(const uint8_t *payload, uint8_t len)
         break;
     case FLEET_MSG_LEADER_HEARTBEAT:
         fleetLeaderReceiveHeartbeat(payload, len);
+        break;
+    case FLEET_MSG_STATE_SAMPLE:
+        fleetStateReceive(payload, len);
+        break;
+    case FLEET_MSG_AVOID_COMMAND:
+        fleetAvoidReceive(payload, len);
         break;
     default:
         break; // unknown / not-yet-handled message type
@@ -109,4 +117,5 @@ void fleetLinkInit(void)
     // ours here.
     fleetIdSetSendFn(fleetLinkSend);
     fleetLeaderSetSendFn(fleetLinkSend);
+    fleetStateSetSendFn(fleetLinkSend);
 }
